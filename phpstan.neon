@@ -1,0 +1,8 @@
+parameters:
+    level: 6
+    paths:
+        - src
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # Collectors dependem de eventos do Laravel cujos tipos variam entre 11 e 12.
+        - identifier: missingType.iterableValue

@@ -1,0 +1,10 @@
+/vendor/
+/build/
+/.phpunit.cache/
+composer.lock
+.phpunit.result.cache
+.php-cs-fixer.cache
+*.ndjson
+*.ndjson.*
+.idea/
+.vscode/
