@@ -1,5 +1,5 @@
 {
-    "name": "observer/sdk",
+    "name": "guilhermeviana-observer/sdk",
     "description": "Laravel SDK for the Observer Observability Platform",
     "keywords": ["laravel", "observability", "monitoring", "apm", "sdk", "observer"],
     "type": "library",
