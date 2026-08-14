@@ -6,7 +6,7 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class QueuePayload implements Payload
+final class QueuePayload implements Payload
 {
     public const STATUS_QUEUED = 'queued';
 
@@ -20,14 +20,14 @@ final readonly class QueuePayload implements Payload
      * @param array<string, mixed>|null $exception
      */
     public function __construct(
-        public string $job,
-        public string $status,
-        public ?string $queue = null,
-        public ?string $connection = null,
-        public ?string $jobId = null,
-        public ?int $attempts = null,
-        public ?float $durationMs = null,
-        public ?array $exception = null,
+        public readonly string $job,
+        public readonly string $status,
+        public readonly ?string $queue = null,
+        public readonly ?string $connection = null,
+        public readonly ?string $jobId = null,
+        public readonly ?int $attempts = null,
+        public readonly ?float $durationMs = null,
+        public readonly ?array $exception = null,
     ) {}
 
     public function toArray(): array

@@ -6,19 +6,19 @@ namespace Observer\DTO;
 
 use Observer\Contracts\Payload;
 
-final readonly class StackFrame implements Payload
+final class StackFrame implements Payload
 {
     /**
      * @param array<int, string> $context Trechos de código ao redor da linha, indexados pelo nº da linha
      */
     public function __construct(
-        public string $file,
-        public int $line,
-        public ?string $function = null,
-        public ?string $class = null,
-        public ?string $type = null,
-        public bool $inApp = true,
-        public array $context = [],
+        public readonly string $file,
+        public readonly int $line,
+        public readonly ?string $function = null,
+        public readonly ?string $class = null,
+        public readonly ?string $type = null,
+        public readonly bool $inApp = true,
+        public readonly array $context = [],
     ) {}
 
     public function toArray(): array

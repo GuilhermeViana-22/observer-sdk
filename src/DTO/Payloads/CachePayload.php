@@ -6,7 +6,7 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class CachePayload implements Payload
+final class CachePayload implements Payload
 {
     public const OP_HIT = 'hit';
 
@@ -20,11 +20,11 @@ final readonly class CachePayload implements Payload
      * @param list<string> $tags
      */
     public function __construct(
-        public string $operation,
-        public string $key,
-        public ?string $store = null,
-        public ?int $ttl = null,
-        public array $tags = [],
+        public readonly string $operation,
+        public readonly string $key,
+        public readonly ?string $store = null,
+        public readonly ?int $ttl = null,
+        public readonly array $tags = [],
     ) {}
 
     public function toArray(): array

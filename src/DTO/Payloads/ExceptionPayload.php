@@ -7,22 +7,22 @@ namespace Observer\DTO\Payloads;
 use Observer\Contracts\Payload;
 use Observer\DTO\StackFrame;
 
-final readonly class ExceptionPayload implements Payload
+final class ExceptionPayload implements Payload
 {
     /**
      * @param list<StackFrame> $frames
      * @param self|null $previous Exception encadeada
      */
     public function __construct(
-        public string $class,
-        public string $message,
-        public int|string $code,
-        public string $file,
-        public int $line,
-        public array $frames = [],
-        public ?self $previous = null,
-        public bool $handled = true,
-        public ?string $fingerprint = null,
+        public readonly string $class,
+        public readonly string $message,
+        public readonly int|string $code,
+        public readonly string $file,
+        public readonly int $line,
+        public readonly array $frames = [],
+        public readonly ?self $previous = null,
+        public readonly bool $handled = true,
+        public readonly ?string $fingerprint = null,
     ) {}
 
     public function toArray(): array

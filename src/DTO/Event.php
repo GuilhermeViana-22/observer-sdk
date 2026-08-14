@@ -16,7 +16,7 @@ use Observer\Support\Uuid;
  * O payload é específico do tipo; o contexto é transversal (runtime, usuário,
  * servidor, trace) e é preenchido pela pipeline, não pelo collector.
  */
-final readonly class Event
+final class Event
 {
     /**
      * @param array<string, mixed> $payload
@@ -24,14 +24,14 @@ final readonly class Event
      * @param array<string, scalar> $tags
      */
     public function __construct(
-        public string $id,
-        public EventType $type,
-        public Severity $level,
-        public string $message,
-        public float $timestamp,
-        public array $payload = [],
-        public array $context = [],
-        public array $tags = [],
+        public readonly string $id,
+        public readonly EventType $type,
+        public readonly Severity $level,
+        public readonly string $message,
+        public readonly float $timestamp,
+        public readonly array $payload = [],
+        public readonly array $context = [],
+        public readonly array $tags = [],
     ) {}
 
     /**

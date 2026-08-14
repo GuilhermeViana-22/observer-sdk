@@ -6,7 +6,7 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class ScheduledTaskPayload implements Payload
+final class ScheduledTaskPayload implements Payload
 {
     public const STATUS_STARTED = 'started';
 
@@ -17,14 +17,14 @@ final readonly class ScheduledTaskPayload implements Payload
     public const STATUS_SKIPPED = 'skipped';
 
     public function __construct(
-        public string $task,
-        public string $status,
-        public ?string $expression = null,
-        public ?string $description = null,
-        public ?float $durationMs = null,
-        public ?int $exitCode = null,
-        public ?string $output = null,
-        public ?string $error = null,
+        public readonly string $task,
+        public readonly string $status,
+        public readonly ?string $expression = null,
+        public readonly ?string $description = null,
+        public readonly ?float $durationMs = null,
+        public readonly ?int $exitCode = null,
+        public readonly ?string $output = null,
+        public readonly ?string $error = null,
     ) {}
 
     public function toArray(): array

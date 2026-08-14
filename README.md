@@ -6,7 +6,7 @@ Instrumenta a aplicação inteira — exceptions, logs, queries, requests, jobs,
 tarefas agendadas, cache e chamadas HTTP externas — e entrega tudo como eventos
 normalizados a um **transporte plugável**.
 
-- **PHP 8.2+** · **Laravel 11 e 12**
+- **PHP 8.1+** · **Laravel 10, 11 e 12**
 - Zero configuração: os collectors se penduram nos eventos nativos do framework
 - Desacoplado do backend: grava em arquivo, memória ou envia ao Observer Server
   (API REST em Go) trocando uma variável de ambiente

@@ -6,20 +6,20 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class QueryPayload implements Payload
+final class QueryPayload implements Payload
 {
     /**
      * @param list<mixed> $bindings
      * @param array<string, mixed>|null $origin Arquivo/linha da aplicação que originou a query
      */
     public function __construct(
-        public string $sql,
-        public float $durationMs,
-        public string $connection,
-        public ?string $driver = null,
-        public array $bindings = [],
-        public bool $slow = false,
-        public ?array $origin = null,
+        public readonly string $sql,
+        public readonly float $durationMs,
+        public readonly string $connection,
+        public readonly ?string $driver = null,
+        public readonly array $bindings = [],
+        public readonly bool $slow = false,
+        public readonly ?array $origin = null,
     ) {}
 
     public function toArray(): array

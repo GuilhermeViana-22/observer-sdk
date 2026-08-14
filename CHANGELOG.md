@@ -5,6 +5,22 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.4.0] — 2026-08-14
+
+### Adicionado
+
+- **Suporte a Laravel 10 e PHP 8.1.** O SDK exigia Laravel 11+ e PHP 8.2+, o
+  que impedia a instalação na maior parte das aplicações em produção hoje — o
+  `composer require` falhava na resolução, antes mesmo de baixar nada.
+
+  A única incompatibilidade real era sintática: 15 arquivos usavam `readonly
+  class`, recurso de PHP 8.2. As propriedades passaram a ser marcadas
+  individualmente com `readonly`, disponível desde o 8.1, sem mudar o
+  comportamento — os objetos continuam imutáveis.
+
+  Verificado instalando em um projeto Laravel 10.50 com PHP 8.1 e enviando um
+  evento de verdade ao servidor.
+
 ## [0.3.0] — 2026-08-14
 
 ### Adicionado

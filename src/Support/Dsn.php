@@ -17,12 +17,12 @@ namespace Observer\Support;
  * A chave é de ESCRITA: serve para enviar eventos, nunca para lê-los. Por isso
  * pode viver no .env de uma aplicação sem expor os dados já coletados.
  */
-final readonly class Dsn
+final class Dsn
 {
     public function __construct(
-        public string $endpoint,
-        public string $key,
-        public string $projectId,
+        public readonly string $endpoint,
+        public readonly string $key,
+        public readonly string $projectId,
     ) {}
 
     /**

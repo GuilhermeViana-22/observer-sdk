@@ -6,18 +6,18 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class LogPayload implements Payload
+final class LogPayload implements Payload
 {
     /**
      * @param array<string, mixed> $context
      * @param array<string, mixed> $extra
      */
     public function __construct(
-        public string $message,
-        public string $level,
-        public ?string $channel = null,
-        public array $context = [],
-        public array $extra = [],
+        public readonly string $message,
+        public readonly string $level,
+        public readonly ?string $channel = null,
+        public readonly array $context = [],
+        public readonly array $extra = [],
     ) {}
 
     public function toArray(): array

@@ -11,17 +11,17 @@ use Observer\Support\Clock;
 /**
  * Migalha de trilha: o histórico recente que antecedeu um evento.
  */
-final readonly class Breadcrumb implements Payload
+final class Breadcrumb implements Payload
 {
     /**
      * @param array<string, mixed> $data
      */
     public function __construct(
-        public string $category,
-        public string $message,
-        public Severity $level = Severity::Info,
-        public array $data = [],
-        public ?float $timestamp = null,
+        public readonly string $category,
+        public readonly string $message,
+        public readonly Severity $level = Severity::Info,
+        public readonly array $data = [],
+        public readonly ?float $timestamp = null,
     ) {}
 
     public function toArray(): array

@@ -11,12 +11,12 @@ namespace Observer\Transport\Http;
  * (DNS, recusa de conexão, timeout). Esse caso é tratado como retriável, igual
  * a um 5xx: o servidor pode simplesmente estar reiniciando.
  */
-final readonly class HttpResponse
+final class HttpResponse
 {
     public function __construct(
-        public int $status,
-        public string $body = '',
-        public ?string $error = null,
+        public readonly int $status,
+        public readonly string $body = '',
+        public readonly ?string $error = null,
     ) {}
 
     public static function transportError(string $error): self

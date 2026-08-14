@@ -6,7 +6,7 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class MetricPayload implements Payload
+final class MetricPayload implements Payload
 {
     public const TYPE_GAUGE = 'gauge';
 
@@ -18,11 +18,11 @@ final readonly class MetricPayload implements Payload
      * @param array<string, scalar> $tags
      */
     public function __construct(
-        public string $name,
-        public float $value,
-        public string $metricType = self::TYPE_GAUGE,
-        public ?string $unit = null,
-        public array $tags = [],
+        public readonly string $name,
+        public readonly float $value,
+        public readonly string $metricType = self::TYPE_GAUGE,
+        public readonly ?string $unit = null,
+        public readonly array $tags = [],
     ) {}
 
     public function toArray(): array

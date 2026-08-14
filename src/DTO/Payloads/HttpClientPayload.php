@@ -6,21 +6,21 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class HttpClientPayload implements Payload
+final class HttpClientPayload implements Payload
 {
     /**
      * @param array<string, mixed> $headers
      */
     public function __construct(
-        public string $method,
-        public string $url,
-        public ?int $statusCode = null,
-        public ?float $durationMs = null,
-        public ?string $host = null,
-        public ?int $responseSize = null,
-        public bool $failed = false,
-        public ?string $error = null,
-        public array $headers = [],
+        public readonly string $method,
+        public readonly string $url,
+        public readonly ?int $statusCode = null,
+        public readonly ?float $durationMs = null,
+        public readonly ?string $host = null,
+        public readonly ?int $responseSize = null,
+        public readonly bool $failed = false,
+        public readonly ?string $error = null,
+        public readonly array $headers = [],
     ) {}
 
     public function toArray(): array

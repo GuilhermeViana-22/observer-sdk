@@ -6,7 +6,7 @@ namespace Observer\DTO\Payloads;
 
 use Observer\Contracts\Payload;
 
-final readonly class CommandPayload implements Payload
+final class CommandPayload implements Payload
 {
     public const STATUS_STARTED = 'started';
 
@@ -17,12 +17,12 @@ final readonly class CommandPayload implements Payload
      * @param array<string, mixed> $options
      */
     public function __construct(
-        public string $command,
-        public string $status,
-        public ?int $exitCode = null,
-        public ?float $durationMs = null,
-        public array $arguments = [],
-        public array $options = [],
+        public readonly string $command,
+        public readonly string $status,
+        public readonly ?int $exitCode = null,
+        public readonly ?float $durationMs = null,
+        public readonly array $arguments = [],
+        public readonly array $options = [],
     ) {}
 
     public function toArray(): array
