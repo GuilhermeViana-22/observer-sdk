@@ -82,6 +82,11 @@ return [
             'connect_timeout' => (float) env('OBSERVER_HTTP_CONNECT_TIMEOUT', 1.0),
             'retries' => (int) env('OBSERVER_HTTP_RETRIES', 2),
             'retry_delay_ms' => (int) env('OBSERVER_HTTP_RETRY_DELAY', 200),
+
+            // Teto para TODAS as tentativas somadas. O envio acontece dentro do
+            // ciclo de request da sua aplicação (no terminate), então este é o
+            // pior caso que o SDK pode acrescentar ao tempo de resposta.
+            'total_budget_ms' => (int) env('OBSERVER_HTTP_TOTAL_BUDGET_MS', 3000),
             'compress' => env('OBSERVER_HTTP_COMPRESS', true),
             'compress_threshold' => 1024,
         ],

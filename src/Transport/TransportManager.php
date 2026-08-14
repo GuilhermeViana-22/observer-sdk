@@ -120,6 +120,8 @@ final class TransportManager
             compress: $this->config->bool('transport.http.compress', true),
             compressThreshold: $this->config->int('transport.http.compress_threshold', 1024),
             logger: $this->logger,
+            totalBudgetMs: $this->config->int('transport.http.total_budget_ms', 3000),
+            maxBatch: $this->config->int('buffer.size', 50),
         );
     }
 }
