@@ -12,10 +12,6 @@ normalizados a um **transporte plugável**.
   Observer Server (API REST em Go) trocando uma variável de ambiente
 - Uma falha do SDK nunca derruba a aplicação
 
-📖 **Entenda o projeto inteiro:** [`docs/EXPLICACAO-SDK.md`](docs/EXPLICACAO-SDK.md)
-— o que cada peça faz e por quê.
-🏛 **Desenho da arquitetura:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-
 ---
 
 ## Instalação
@@ -125,8 +121,7 @@ e-mail, corpo da request) fica **de fora por padrão**; ligue com
 
 Buffer em memória com entrega em lote, amostragem por tipo de evento, limites
 rígidos de tamanho/profundidade e flush no `terminate()` — depois que a resposta
-já foi enviada ao cliente. As decisões e seus trade-offs estão detalhados em
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+já foi enviada ao cliente.
 
 ## Desenvolvimento
 

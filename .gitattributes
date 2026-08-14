@@ -11,6 +11,9 @@
 /.github            export-ignore
 /CHANGELOG.md       export-ignore
 
+# docs/, agent.md e claude.md não aparecem aqui porque saíram do repositório
+# (ver .gitignore): o que não é versionado nunca entra no zip do Composer.
+
 # Normaliza a quebra de linha no repositório, independente do sistema de quem
 # commita.
 * text=auto eol=lf

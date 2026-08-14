@@ -8,3 +8,9 @@ composer.lock
 *.ndjson.*
 .idea/
 .vscode/
+
+# Documentação interna e instruções de desenvolvimento assistido por IA:
+# ficam na máquina, fora do repositório e fora do pacote publicado.
+/docs/
+/agent.md
+/claude.md

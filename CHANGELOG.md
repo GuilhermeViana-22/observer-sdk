@@ -5,6 +5,18 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.1.1] — 2026-08-14
+
+### Corrigido
+
+- O pacote publicado carregava `agent.md`, `claude.md` e `docs/` para dentro do
+  `vendor/` de quem instalava. Eram anotações internas de desenvolvimento — o
+  `agent.md`, inclusive, descrevia uma estrutura de diretórios que o código não
+  tem mais. Os três saíram do repositório e agora vivem só na máquina de
+  desenvolvimento.
+- Removidos do README os links para `docs/`, que apontariam para arquivos
+  inexistentes.
+
 ## [0.1.0] — 2026-08-14
 
 Primeira versão publicada. O pacote passa a ser instalável via
