@@ -5,6 +5,26 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.2.0] — 2026-08-14
+
+### Adicionado
+
+- **Transporte HTTP funcional.** `OBSERVER_TRANSPORT=http` passa a enviar os
+  eventos ao Observer Server: lote, `Authorization: Bearer`, gzip acima de 1 KB
+  e retry com backoff exponencial. Antes o driver coletava e descartava.
+- `HttpSender` com dois mecanismos — `ext-curl` (preferido, único com timeout de
+  conexão separado do total) e wrappers nativos como fallback. Nenhuma
+  dependência nova: um SDK não deve impor cliente HTTP à aplicação hospedeira.
+- `transport.http.total_budget_ms` (default 3000) limita o tempo somado de todas
+  as tentativas. O envio acontece no `terminate()`, dentro do ciclo de request
+  da sua aplicação — sem esse teto, o pior caso somaria segundos à resposta.
+
+### Corrigido
+
+- `sendBatch()` acumulava eventos sem nunca despachar, e `flush()` esvaziava o
+  buffer retornando `false` sem enviar. Mesmo com `dispatch()` implementado,
+  nada sairia.
+
 ## [0.1.1] — 2026-08-14
 
 ### Corrigido

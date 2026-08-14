@@ -8,8 +8,8 @@ normalizados a um **transporte plugável**.
 
 - **PHP 8.2+** · **Laravel 11 e 12**
 - Zero configuração: os collectors se penduram nos eventos nativos do framework
-- Desacoplado do backend: hoje grava em arquivo/memória, amanhã envia ao
-  Observer Server (API REST em Go) trocando uma variável de ambiente
+- Desacoplado do backend: grava em arquivo, memória ou envia ao Observer Server
+  (API REST em Go) trocando uma variável de ambiente
 - Uma falha do SDK nunca derruba a aplicação
 
 ---
@@ -24,16 +24,23 @@ php artisan vendor:publish --tag=observer-config
 O provider é descoberto automaticamente. Não é preciso registrar middleware,
 listener ou canal de log.
 
-> **O driver `http` ainda não envia nada.** `HttpTransport::dispatch()` não está
-> implementado: os eventos são coletados e descartados em silêncio. Use `file`
-> até o Observer Server entrar no ar — ver [Transportes](#transportes).
+Para enviar ao Observer Server, aponte o endpoint e a chave do projeto:
+
+```dotenv
+OBSERVER_TRANSPORT=http
+OBSERVER_ENDPOINT=https://sua-api-observer.com
+OBSERVER_API_KEY=lsec_...
+```
+
+A chave é o token de integração exibido uma única vez ao criar o projeto no
+painel.
 
 ## Configuração mínima
 
 ```dotenv
 OBSERVER_ENABLED=true
 OBSERVER_PROJECT=minha-api
-OBSERVER_TRANSPORT=file          # null | memory | file | http (não implementado)
+OBSERVER_TRANSPORT=file          # null | memory | file | http
 OBSERVER_FILE_PATH=/var/log/observer.ndjson
 ```
 
@@ -87,7 +94,7 @@ Cada um pode ser desligado em `config/observer.php`.
 | `null` | descarta tudo, custo O(1) |
 | `memory` | testes — acumula em memória com asserts prontos |
 | `file` | desenvolvimento local — JSON Lines com rotação por tamanho |
-| `http` | **não implementado** — `dispatch()` lança `TransportException`; os eventos são coletados e descartados. O contrato (endpoint, headers, gzip, retry) já está fixado na classe |
+| `http` | produção — envia ao Observer Server em lote, com gzip acima de 1 KB e retry com backoff. Usa `ext-curl` quando disponível, com fallback para os wrappers nativos |
 
 Driver próprio, sem herdar de nada:
 
