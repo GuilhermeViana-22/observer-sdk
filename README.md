@@ -24,16 +24,17 @@ php artisan vendor:publish --tag=observer-config
 O provider é descoberto automaticamente. Não é preciso registrar middleware,
 listener ou canal de log.
 
-Para enviar ao Observer Server, aponte o endpoint e a chave do projeto:
+Para enviar ao Observer Server, cole o DSN do projeto — uma linha, e só:
 
 ```dotenv
-OBSERVER_TRANSPORT=http
-OBSERVER_ENDPOINT=https://sua-api-observer.com
-OBSERVER_API_KEY=lsec_...
+OBSERVER_DSN=https://lsec_sua_chave@sua-api-observer.com/id-do-projeto
 ```
 
-A chave é o token de integração exibido uma única vez ao criar o projeto no
-painel.
+O DSN é exibido uma única vez, ao criar o projeto no painel. Com ele presente o
+transporte `http` liga sozinho; não é preciso definir mais nada.
+
+É uma credencial de **escrita**: envia eventos, mas não lê nenhum. Ler exige
+login de usuário.
 
 ## Configuração mínima
 

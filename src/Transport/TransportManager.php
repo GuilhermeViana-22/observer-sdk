@@ -7,6 +7,7 @@ namespace Observer\Transport;
 use Closure;
 use Observer\Contracts\Transport;
 use Observer\Exceptions\TransportException;
+use Observer\Support\Dsn;
 use Observer\Serializers\JsonSerializer;
 use Observer\Support\Configuration;
 use Observer\Support\InternalLogger;
@@ -109,9 +110,18 @@ final class TransportManager
 
     private function createHttpDriver(): HttpTransport
     {
+        // O DSN, quando presente, é a fonte da verdade: ele carrega endpoint e
+        // chave numa string só. Os valores separados continuam funcionando para
+        // quem prefere configurá-los assim.
+        $dsn = Dsn::parse($this->config->string('transport.http.dsn'));
+
+        if ($dsn === null && $this->config->string('transport.http.dsn') !== null) {
+            $this->logger?->error('OBSERVER_DSN inválido; o envio ficará desligado.');
+        }
+
         return new HttpTransport(
-            endpoint: $this->config->string('transport.http.endpoint', '') ?? '',
-            apiKey: $this->config->string('transport.http.api_key'),
+            endpoint: $dsn?->endpoint ?? ($this->config->string('transport.http.endpoint', '') ?? ''),
+            apiKey: $dsn?->key ?? $this->config->string('transport.http.api_key'),
             serializer: $this->serializer,
             timeout: $this->config->float('transport.http.timeout', 2.0),
             connectTimeout: $this->config->float('transport.http.connect_timeout', 1.0),

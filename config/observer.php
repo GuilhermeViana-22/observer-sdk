@@ -66,7 +66,12 @@ return [
 
     'transport' => [
 
-        'driver' => env('OBSERVER_TRANSPORT', 'file'),
+        /*
+         * Com OBSERVER_DSN definido, o driver padrão passa a ser 'http' — a
+         * presença da credencial É a intenção de enviar. Sem ela, 'file'.
+         * OBSERVER_TRANSPORT explícito continua vencendo os dois.
+         */
+        'driver' => env('OBSERVER_TRANSPORT', env('OBSERVER_DSN') ? 'http' : 'file'),
 
         'file' => [
             'path' => env('OBSERVER_FILE_PATH', storage_path('logs/observer.ndjson')),
@@ -76,6 +81,14 @@ return [
         ],
 
         'http' => [
+            /*
+             * Credencial do projeto em uma string só, no formato
+             * https://<chave>@<host>/<id-do-projeto>, copiada do painel ao
+             * criar o projeto. Quando presente, ela preenche endpoint e chave.
+             */
+            'dsn' => env('OBSERVER_DSN'),
+
+            // Alternativa ao DSN, para quem prefere separar os valores.
             'endpoint' => env('OBSERVER_ENDPOINT', 'https://api.observer.dev'),
             'api_key' => env('OBSERVER_API_KEY'),
             'timeout' => (float) env('OBSERVER_HTTP_TIMEOUT', 2.0),

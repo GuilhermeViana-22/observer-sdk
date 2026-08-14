@@ -9,6 +9,12 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **`OBSERVER_DSN`** — credencial do projeto em uma variável só, no formato
+  `https://<chave>@<host>/<id-do-projeto>`, copiada do painel. Substitui
+  `OBSERVER_ENDPOINT` + `OBSERVER_API_KEY`, que continuam funcionando. Com o DSN
+  definido, o transporte `http` passa a ser o padrão — a presença da credencial
+  é a intenção de enviar.
+
 - **Transporte HTTP funcional.** `OBSERVER_TRANSPORT=http` passa a enviar os
   eventos ao Observer Server: lote, `Authorization: Bearer`, gzip acima de 1 KB
   e retry com backoff exponencial. Antes o driver coletava e descartava.
