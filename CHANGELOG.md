@@ -5,6 +5,35 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.3.0] — 2026-08-14
+
+### Adicionado
+
+- **`OBSERVER_DSN`** — credencial do projeto em uma variável só, no formato
+  `https://<chave>@<host>/<id-do-projeto>`, copiada do painel. Substitui
+  `OBSERVER_ENDPOINT` + `OBSERVER_API_KEY`, que continuam funcionando. Com o DSN
+  definido, o transporte `http` passa a ser o padrão — ter a credencial é a
+  intenção de enviar.
+
+### Corrigido
+
+- A configuração do pacote passa a ser fundida **em profundidade** com a
+  publicada na aplicação. O `mergeConfigFrom` do Laravel funde só o primeiro
+  nível, então o bloco `transport` do arquivo publicado substituía o do pacote
+  inteiro: quem já tinha publicado o config antes desta versão não enxergaria a
+  chave `transport.http.dsn`, e o sintoma seria "configurei o DSN e não envia
+  nada".
+- Aviso no log quando há DSN configurado mas o transporte em uso não é `http` —
+  a combinação que antes falhava em silêncio.
+
+### Atualizando da 0.2.x
+
+Republique o config para receber o padrão de transporte sensível ao DSN:
+
+```bash
+php artisan vendor:publish --tag=observer-config --force
+```
+
 ## [0.2.0] — 2026-08-14
 
 ### Adicionado

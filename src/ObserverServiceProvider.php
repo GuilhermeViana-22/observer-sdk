@@ -81,12 +81,66 @@ final class ObserverServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/observer.php', 'observer');
+        $this->mergeObserverConfig();
 
         $this->registerSupport();
         $this->registerPipeline();
         $this->registerTransport();
         $this->registerClient();
+    }
+
+    /**
+     * Funde a configuração do pacote com a publicada, EM PROFUNDIDADE.
+     *
+     * O mergeConfigFrom do Laravel é raso: ele funde só o primeiro nível. Como
+     * toda a nossa configuração vive aninhada em 'transport', 'collectors' e
+     * afins, o arquivo publicado na aplicação substituía o bloco inteiro do
+     * pacote — e uma chave NOVA de uma versão nova (foi o caso de
+     * transport.http.dsn) simplesmente não existia para quem já tinha
+     * publicado o config antes.
+     *
+     * O usuário só descobriria isso como "configurei e não envia nada".
+     *
+     * Aqui os valores da aplicação sempre vencem; o pacote apenas preenche o
+     * que estiver faltando.
+     */
+    private function mergeObserverConfig(): void
+    {
+        /** @var \Illuminate\Contracts\Config\Repository $repository */
+        $repository = $this->app->make('config');
+
+        /** @var array<string, mixed> $package */
+        $package = require __DIR__.'/../config/observer.php';
+
+        /** @var array<string, mixed> $application */
+        $application = $repository->get('observer', []);
+
+        $repository->set('observer', $this->fillMissing($package, $application));
+    }
+
+    /**
+     * @param  array<string, mixed>  $defaults
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function fillMissing(array $defaults, array $overrides): array
+    {
+        foreach ($defaults as $key => $value) {
+            if (! array_key_exists($key, $overrides)) {
+                $overrides[$key] = $value;
+
+                continue;
+            }
+
+            // Só desce em mapas. Listas (como scrubbing.keys) pertencem
+            // inteiras à aplicação: fundi-las traria de volta itens que o
+            // usuário removeu de propósito.
+            if (is_array($value) && is_array($overrides[$key]) && ! array_is_list($value)) {
+                $overrides[$key] = $this->fillMissing($value, $overrides[$key]);
+            }
+        }
+
+        return $overrides;
     }
 
     public function boot(): void

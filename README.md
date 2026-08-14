@@ -33,6 +33,10 @@ OBSERVER_DSN=https://lsec_sua_chave@sua-api-observer.com/id-do-projeto
 O DSN é exibido uma única vez, ao criar o projeto no painel. Com ele presente o
 transporte `http` liga sozinho; não é preciso definir mais nada.
 
+> Atualizando de uma versão anterior? Republique o config —
+> `php artisan vendor:publish --tag=observer-config --force` — para receber o
+> padrão de transporte sensível ao DSN.
+
 É uma credencial de **escrita**: envia eventos, mas não lê nenhum. Ler exige
 login de usuário.
 

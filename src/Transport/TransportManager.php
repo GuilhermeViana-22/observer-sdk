@@ -34,6 +34,8 @@ final class TransportManager
 
     public function driver(?string $name = null): Transport
     {
+        $this->warnAboutIgnoredDsn($name ?? $this->defaultDriver());
+
         $name ??= $this->defaultDriver();
 
         return $this->resolved[$name] ??= $this->resolve($name);
@@ -107,6 +109,39 @@ final class TransportManager
             logger: $this->logger,
         );
     }
+
+    /**
+     * Avisa quando existe DSN configurado mas o transporte escolhido não envia.
+     *
+     * É a combinação que produz o pior tipo de bug: o usuário cola o DSN,
+     * conclui que integrou, e nada aparece no painel — sem erro nenhum. A
+     * configuração da aplicação continua vencendo (não trocamos o driver por
+     * conta própria), mas o silêncio vira uma linha no log.
+     *
+     * Acontece tipicamente ao ATUALIZAR o SDK sem republicar o config: o
+     * arquivo antigo tem `driver => env('OBSERVER_TRANSPORT', 'file')`, sem
+     * conhecer o DSN.
+     */
+    private function warnAboutIgnoredDsn(string $driver): void
+    {
+        if ($driver === 'http' || $this->warnedAboutDsn) {
+            return;
+        }
+
+        if ($this->config->string('transport.http.dsn') === null) {
+            return;
+        }
+
+        $this->warnedAboutDsn = true;
+
+        $this->logger?->warning(
+            "OBSERVER_DSN está definido, mas o transporte em uso é '{$driver}': nenhum evento será enviado. ".
+            'Defina OBSERVER_TRANSPORT=http ou republique o config com '.
+            '`php artisan vendor:publish --tag=observer-config --force`.'
+        );
+    }
+
+    private bool $warnedAboutDsn = false;
 
     private function createHttpDriver(): HttpTransport
     {
