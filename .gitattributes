@@ -1,0 +1,16 @@
+# O Composer instala o pacote baixando um zip do repositório inteiro. Sem
+# export-ignore, todo projeto que instalar o SDK carrega junto a suíte de testes
+# e a configuração de ferramentas de desenvolvimento — arquivos que nunca são
+# executados em produção.
+/tests              export-ignore
+/phpunit.xml        export-ignore
+/phpstan.neon       export-ignore
+/pint.json          export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/.github            export-ignore
+/CHANGELOG.md       export-ignore
+
+# Normaliza a quebra de linha no repositório, independente do sistema de quem
+# commita.
+* text=auto eol=lf
