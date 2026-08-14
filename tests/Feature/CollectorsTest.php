@@ -125,6 +125,37 @@ final class CollectorsTest extends TestCase
         $this->assertSame('relevante', $this->fake->transport()->last(EventType::Log)?->message);
     }
 
+    /**
+     * O SDK é o MEIO, nunca o fim.
+     *
+     * O caso real: o PHP 8.5 emite um deprecated de dentro do CurlSender
+     * durante o envio; o Laravel loga como warning; o LogCollector capturava;
+     * virava evento; que exigia outro envio. Um laço que nunca chegava a zero,
+     * cobrado ao cliente em ingestão e retenção.
+     */
+    public function test_nao_captura_avisos_emitidos_de_dentro_do_proprio_sdk(): void
+    {
+        $arquivoDoSdk = dirname(__DIR__, 2).'/src/Transport/Http/CurlSender.php';
+
+        Log::warning(
+            'Function curl_close() is deprecated since 8.5, as it has no effect '
+            ."since PHP 8.0 in {$arquivoDoSdk} on line 66"
+        );
+
+        $this->fake->assertNothingRecorded(EventType::Log);
+    }
+
+    /**
+     * O guard fecha o SDK para si mesmo — não silencia a aplicação. Um aviso do
+     * PHP vindo do código do CLIENTE continua sendo observação legítima.
+     */
+    public function test_continua_capturando_avisos_da_aplicacao(): void
+    {
+        Log::warning('Undefined array key "nome" in /var/www/html/app/Http/Controllers/UserController.php on line 42');
+
+        $this->fake->assertCount(1, EventType::Log);
+    }
+
     public function test_log_com_exception_vira_evento_de_exception(): void
     {
         Log::error('falha no gateway', ['exception' => new RuntimeException('timeout')]);

@@ -15,6 +15,7 @@ use Observer\Enums\Severity;
 use Observer\Observer;
 use Observer\Support\Configuration;
 use Observer\Support\InternalLogger;
+use Observer\Support\SelfGuard;
 use Throwable;
 
 /**
@@ -37,12 +38,6 @@ use Throwable;
  */
 abstract class AbstractCollector implements Collector
 {
-    /**
-     * Compartilhado por todos os collectors: enquanto um evento está sendo
-     * registrado, nenhum outro collector produz eventos.
-     */
-    private static bool $recording = false;
-
     /** @var array<string, true> */
     private static array $seenExceptions = [];
 
@@ -93,7 +88,9 @@ abstract class AbstractCollector implements Collector
     protected function listen(string $event, callable $handler): void
     {
         $this->events->listen($event, function (object $payload) use ($handler, $event): void {
-            if (self::$recording) {
+            // O SDK é o meio, não o fim: nada que aconteça dentro dele —
+            // registrando OU enviando — pode virar evento. Ver SelfGuard.
+            if (SelfGuard::active()) {
                 return;
             }
 
@@ -115,17 +112,11 @@ abstract class AbstractCollector implements Collector
 
     protected function emit(Event $event): void
     {
-        if (self::$recording) {
+        if (SelfGuard::active()) {
             return;
         }
 
-        self::$recording = true;
-
-        try {
-            $this->observer()->record($event);
-        } finally {
-            self::$recording = false;
-        }
+        SelfGuard::run(fn () => $this->observer()->record($event));
     }
 
     protected function option(string $key, mixed $default = null): mixed
@@ -165,7 +156,7 @@ abstract class AbstractCollector implements Collector
 
     protected static function isRecording(): bool
     {
-        return self::$recording;
+        return SelfGuard::active();
     }
 
     /**

@@ -63,7 +63,15 @@ final class CurlSender implements HttpSender
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         $error = curl_error($handle);
 
-        curl_close($handle);
+        // SEM curl_close(): desde o PHP 8.0 o curl_init() devolve um objeto
+        // CurlHandle em vez de resource, a função virou no-op, e o PHP 8.5 a
+        // depreca. O handle é liberado pelo coletor de lixo quando $handle sai
+        // de escopo, no fim deste método.
+        //
+        // Chamá-la não fechava nada e ainda emitia um deprecated A CADA ENVIO —
+        // que o logger da aplicação capturava e o LogCollector transformava em
+        // evento, exigindo mais um envio. Uma linha sem efeito nenhum
+        // sustentando um laço de ruído cobrado ao cliente.
 
         if ($response === false || $status === 0) {
             return HttpResponse::transportError($error !== '' ? $error : 'falha de transporte');

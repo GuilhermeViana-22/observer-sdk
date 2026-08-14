@@ -5,6 +5,45 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.4.1] — 2026-08-14
+
+### Corrigido
+
+- **O SDK deixou de observar a si mesmo.** Em produção, no PHP 8.5, cada envio
+  de lote gerava um evento novo — e o volume de logs nunca chegava a zero:
+
+  ```
+  envio → curl_close() emite um deprecated do PHP 8.5
+        → Laravel loga como warning
+          → LogCollector captura
+            → vira evento no buffer
+              → próximo envio ⟲
+  ```
+
+  O `curl_close()` (`Transport/Http/CurlSender.php`) foi removido. Desde o PHP
+  8.0 o `curl_init()` devolve um objeto `CurlHandle` em vez de resource, a
+  função virou no-op e o 8.5 a depreca — o handle é liberado pelo coletor de
+  lixo. Era uma linha sem efeito nenhum sustentando um laço de ruído, cobrado
+  ao cliente em ingestão e retenção.
+
+  A causa, porém, não era o `curl_close`: era o guard anti-recursão viver
+  dentro do `AbstractCollector` e cobrir apenas o **registro** de um evento. O
+  envio é outro momento, com o guard já liberado, então qualquer aviso emitido
+  durante ele passava direto.
+
+  O guard virou `Support\SelfGuard`, é reentrante (contador, não booleano — o
+  envio pode acontecer de dentro de um registro quando `buffer.size = 1`) e
+  agora envolve também `HttpTransport::dispatchPending()`. Nada que o PHP emita
+  do caminho de envio — deprecated de curl, warning de socket, notice de
+  serialização — vira evento.
+
+  Como segunda camada, o `LogCollector` descarta mensagens cuja origem seja um
+  arquivo do próprio pacote, pegando o resíduo que o guard não cobre: avisos
+  disparados no boot do provider, em destrutores ou em shutdown handlers.
+
+  Avisos vindos do código da **aplicação** continuam sendo capturados
+  normalmente: o guard fecha o SDK para si mesmo, não silencia o cliente.
+
 ## [0.4.0] — 2026-08-14
 
 ### Adicionado

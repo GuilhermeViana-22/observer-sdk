@@ -9,6 +9,7 @@ use Observer\Contracts\Serializer;
 use Observer\Contracts\Transport;
 use Observer\DTO\Event;
 use Observer\Support\InternalLogger;
+use Observer\Support\SelfGuard;
 use Observer\Transport\Http\SenderFactory;
 
 /**
@@ -110,12 +111,22 @@ final class HttpTransport implements Transport
         // responsabilidade do dispatch().
         $this->pending = [];
 
-        $ok = true;
-        foreach ($chunks as $chunk) {
-            $ok = $this->dispatch($chunk) && $ok;
-        }
+        // O ENVIO INTEIRO roda sob o guard.
+        //
+        // Tudo o que o PHP emitir daqui para dentro — um deprecated do curl, um
+        // warning de socket, um notice de serialização — chega ao logger da
+        // aplicação e seria capturado pelo LogCollector, virando um evento novo
+        // que exigiria outro envio. O SDK é o meio, não o fim: o que acontece
+        // dentro dele não é observação, é ruído sobre si mesmo.
+        return SelfGuard::run(function () use ($chunks): bool {
+            $ok = true;
 
-        return $ok;
+            foreach ($chunks as $chunk) {
+                $ok = $this->dispatch($chunk) && $ok;
+            }
+
+            return $ok;
+        });
     }
 
     public function close(): void
