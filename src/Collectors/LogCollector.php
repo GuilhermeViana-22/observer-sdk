@@ -9,6 +9,7 @@ use Observer\DTO\Event;
 use Observer\DTO\Payloads\LogPayload;
 use Observer\Enums\EventType;
 use Observer\Enums\Severity;
+use Observer\Support\InternalLogger;
 use Throwable;
 
 /**
@@ -116,6 +117,13 @@ final class LogCollector extends AbstractCollector
     private static function originatesInSdk(string $message): bool
     {
         static $root = null;
+
+        // As linhas do próprio InternalLogger chegam aqui prefixadas. O
+        // SelfGuard já cobre o caso normal, mas um aviso emitido fora do
+        // guard não pode virar evento faturado só por causa disso.
+        if (str_starts_with($message, InternalLogger::PREFIX)) {
+            return true;
+        }
 
         // dirname duas vezes: daqui (src/Collectors) até a raiz de src/.
         $root ??= dirname(__DIR__);

@@ -31,13 +31,13 @@ return [
     |
     */
 
-    'project' => env('OBSERVER_PROJECT', env('APP_NAME', 'laravel')),
+    'project' => env('OBSERVER_PROJECT') ?: env('APP_NAME', 'laravel'),
 
-    'environment' => env('OBSERVER_ENVIRONMENT', env('APP_ENV', 'production')),
+    'environment' => env('OBSERVER_ENVIRONMENT') ?: env('APP_ENV', 'production'),
 
     'release' => env('OBSERVER_RELEASE'),
 
-    'server_name' => env('OBSERVER_SERVER_NAME', gethostname() ?: null),
+    'server_name' => env('OBSERVER_SERVER_NAME') ?: (gethostname() ?: null),
 
     /*
     |--------------------------------------------------------------------------
@@ -71,10 +71,10 @@ return [
          * presença da credencial É a intenção de enviar. Sem ela, 'file'.
          * OBSERVER_TRANSPORT explícito continua vencendo os dois.
          */
-        'driver' => env('OBSERVER_TRANSPORT', env('OBSERVER_DSN') ? 'http' : 'file'),
+        'driver' => env('OBSERVER_TRANSPORT') ?: (env('OBSERVER_DSN') ? 'http' : 'file'),
 
         'file' => [
-            'path' => env('OBSERVER_FILE_PATH', storage_path('logs/observer.ndjson')),
+            'path' => env('OBSERVER_FILE_PATH') ?: storage_path('logs/observer.ndjson'),
             'max_size' => (int) env('OBSERVER_FILE_MAX_SIZE', 10 * 1024 * 1024),
             'max_files' => (int) env('OBSERVER_FILE_MAX_FILES', 5),
             'permission' => 0644,
@@ -89,7 +89,7 @@ return [
             'dsn' => env('OBSERVER_DSN'),
 
             // Alternativa ao DSN, para quem prefere separar os valores.
-            'endpoint' => env('OBSERVER_ENDPOINT', 'https://api.observer.dev'),
+            'endpoint' => env('OBSERVER_ENDPOINT'),
             'api_key' => env('OBSERVER_API_KEY'),
             'timeout' => (float) env('OBSERVER_HTTP_TIMEOUT', 2.0),
             'connect_timeout' => (float) env('OBSERVER_HTTP_CONNECT_TIMEOUT', 1.0),
@@ -171,7 +171,7 @@ return [
 
         'logs' => [
             'enabled' => env('OBSERVER_CAPTURE_LOGS', true),
-            'level' => env('OBSERVER_LOG_LEVEL', 'debug'),
+            'level' => env('OBSERVER_LOG_LEVEL') ?: 'debug',
             'channels' => [],
         ],
 
@@ -315,5 +315,19 @@ return [
     */
 
     'debug' => env('OBSERVER_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Avisos do SDK no log da aplicação
+    |--------------------------------------------------------------------------
+    |
+    | Independente do debug, o SDK escreve no seu log quando está configurado
+    | mas NÃO está funcionando: DSN inválido, endpoint ausente, servidor
+    | recusando o lote. São no máximo uma linha por motivo, por processo, e
+    | nunca viram eventos faturados. Desligue só se preferir a falha silenciosa.
+    |
+    */
+
+    'log_internal' => env('OBSERVER_LOG_INTERNAL', true),
 
 ];

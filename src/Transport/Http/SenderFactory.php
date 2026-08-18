@@ -19,13 +19,13 @@ final class SenderFactory
     public static function detect(): HttpSender
     {
         if (CurlSender::available()) {
-            return new CurlSender();
+            return new CurlSender;
         }
 
         if (StreamSender::available()) {
-            return new StreamSender();
+            return new StreamSender;
         }
 
-        return new UnavailableSender();
+        return new UnavailableSender;
     }
 }

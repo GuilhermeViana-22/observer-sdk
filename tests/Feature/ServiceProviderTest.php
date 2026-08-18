@@ -12,7 +12,9 @@ use Observer\Observer;
 use Observer\Pipeline\EventPipeline;
 use Observer\Support\Configuration;
 use Observer\Tests\TestCase;
+use Observer\Transport\FileTransport;
 use Observer\Transport\MemoryTransport;
+use Observer\Transport\NullTransport;
 use Observer\Transport\TransportManager;
 use RuntimeException;
 
@@ -133,6 +135,53 @@ final class ServiceProviderTest extends TestCase
         ObserverFacade::log('error', 'nunca chega');
 
         $fake->assertNothingRecorded();
+    }
+
+    /**
+     * O crash relatado em produção: `OBSERVER_DSN=` vazio no .env fazia o
+     * TransportManager avisar sobre DSN ignorado, e o aviso chamava um método
+     * que não existia — derrubando qualquer comando artisan no boot.
+     */
+    public function test_boot_com_dsn_vazio_nao_derruba_a_aplicacao(): void
+    {
+        config()->set('observer.transport.driver', 'file');
+        config()->set('observer.transport.file.path', sys_get_temp_dir().'/observer-boot-test.ndjson');
+        config()->set('observer.transport.http.dsn', '');
+        config()->set('observer.transport.http.endpoint', '');
+        config()->set('observer.transport.http.api_key', '');
+
+        $this->refreshObserver();
+
+        $transport = $this->app->make(TransportManager::class)->driver();
+
+        $this->assertInstanceOf(FileTransport::class, $transport);
+        $this->assertNotNull($this->app->make(ClientInterface::class)->log('info', 'boot ok'));
+
+        @unlink(sys_get_temp_dir().'/observer-boot-test.ndjson');
+    }
+
+    /**
+     * Mesmo cenário, com o transporte http selecionado e nada preenchido: o
+     * envio precisa ficar desligado em vez de tentar uma URL quebrada a cada
+     * flush, e ainda assim sem exception nenhuma.
+     */
+    public function test_transporte_http_sem_credencial_fica_desligado(): void
+    {
+        config()->set('observer.transport.driver', 'http');
+        config()->set('observer.transport.http.dsn', '');
+        config()->set('observer.transport.http.endpoint', '');
+
+        $this->refreshObserver();
+
+        $this->assertInstanceOf(NullTransport::class, $this->app->make(TransportManager::class)->driver());
+        $this->assertNotNull($this->app->make(ClientInterface::class)->log('info', 'sem envio'));
+    }
+
+    private function refreshObserver(): void
+    {
+        foreach ([Configuration::class, TransportManager::class, EventBuffer::class, Observer::class, ClientInterface::class] as $abstract) {
+            $this->app->forgetInstance($abstract);
+        }
     }
 
     public function test_dados_sensiveis_sao_mascarados_ponta_a_ponta(): void

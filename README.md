@@ -49,6 +49,24 @@ OBSERVER_TRANSPORT=file          # null | memory | file | http
 OBSERVER_FILE_PATH=/var/log/observer.ndjson
 ```
 
+Variável declarada e vazia (`OBSERVER_DSN=`) conta como **não definida**: o
+`.env` pode ser preparado com os nomes em branco enquanto o endpoint do
+servidor não existe, sem ligar nada pela metade e sem aviso indevido.
+
+### Quando o SDK não consegue enviar
+
+Configuração que não funciona não fica em silêncio: DSN inválido, transporte
+sem endpoint ou servidor recusando o lote viram **uma** linha no log da sua
+aplicação (uma por motivo, por processo), com o prefixo `[observer]`. Essas
+linhas nunca voltam como eventos cobrados. Para silenciá-las:
+
+```dotenv
+OBSERVER_LOG_INTERNAL=false
+```
+
+`OBSERVER_DEBUG=true` é outra coisa: acrescenta o diagnóstico interno do
+próprio SDK, útil só em desenvolvimento.
+
 ## API pública
 
 ```php

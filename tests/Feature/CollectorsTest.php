@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Log;
 use Observer\Enums\EventType;
 use Observer\Enums\Severity;
 use Observer\Facades\Observer as ObserverFacade;
+use Observer\Support\InternalLogger;
 use Observer\Testing\ObserverFake;
 use Observer\Tests\TestCase;
 use RuntimeException;
@@ -154,6 +155,20 @@ final class CollectorsTest extends TestCase
         Log::warning('Undefined array key "nome" in /var/www/html/app/Http/Controllers/UserController.php on line 42');
 
         $this->fake->assertCount(1, EventType::Log);
+    }
+
+    /**
+     * Os avisos que o próprio SDK escreve no log da aplicação — DSN ignorado,
+     * servidor recusando o lote — não podem voltar como eventos faturados.
+     */
+    public function test_nao_captura_os_avisos_do_internal_logger(): void
+    {
+        $this->app->make(InternalLogger::class)->warning('servidor indisponível');
+
+        // Mesmo fora do SelfGuard, o prefixo já identifica a linha como nossa.
+        Log::warning(InternalLogger::PREFIX.' outro aviso interno');
+
+        $this->fake->assertNothingRecorded(EventType::Log);
     }
 
     public function test_log_com_exception_vira_evento_de_exception(): void

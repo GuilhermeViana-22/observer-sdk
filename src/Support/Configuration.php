@@ -48,9 +48,22 @@ final class Configuration
         return $value;
     }
 
+    /**
+     * Booleano da configuração, tratando vazio como AUSENTE.
+     *
+     * `OBSERVER_ENABLED=` sem valor chega como string vazia, que o
+     * FILTER_VALIDATE_BOOL lê como false — a variável declarada e não
+     * preenchida desligaria o SDK inteiro em silêncio.
+     */
     public function bool(string $key, bool $default = false): bool
     {
-        return filter_var($this->get($key, $default), FILTER_VALIDATE_BOOL);
+        $value = $this->get($key, $default);
+
+        if (is_string($value) && trim($value) === '') {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOL);
     }
 
     public function int(string $key, int $default = 0): int
@@ -67,11 +80,29 @@ final class Configuration
         return is_numeric($value) ? (float) $value : $default;
     }
 
+    /**
+     * String da configuração, tratando vazio como AUSENTE.
+     *
+     * `OBSERVER_DSN=` no .env não chega aqui como null: o env() do Laravel
+     * devolve a string vazia. Sem esta normalização, uma variável declarada e
+     * não preenchida — o estado normal de quem ainda vai integrar — parece
+     * configuração válida para o SDK inteiro: DSN "definido" porém impossível
+     * de interpretar, endpoint vazio, Bearer sem chave.
+     *
+     * Só o vazio (inclusive de espaços) vira o default; o valor devolvido é o
+     * original, sem trim, porque há configurações em que espaço é conteúdo.
+     */
     public function string(string $key, ?string $default = null): ?string
     {
         $value = $this->get($key, $default);
 
-        return is_scalar($value) ? (string) $value : $default;
+        if (! is_scalar($value)) {
+            return $default;
+        }
+
+        $value = (string) $value;
+
+        return trim($value) === '' ? $default : $value;
     }
 
     /**
