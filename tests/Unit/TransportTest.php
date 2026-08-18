@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Observer\Tests\Unit;
 
 use Observer\Buffer\EventBuffer;
+use Observer\Contracts\Transport;
 use Observer\DTO\Event;
 use Observer\Enums\EventType;
 use Observer\Exceptions\TransportException;
 use Observer\Serializers\JsonSerializer;
 use Observer\Support\Configuration;
+use Observer\Support\InternalLogger;
 use Observer\Transport\FileTransport;
+use Observer\Transport\HttpTransport;
 use Observer\Transport\MemoryTransport;
 use Observer\Transport\NullTransport;
 use Observer\Transport\TransportManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 
 final class TransportTest extends TestCase
 {
@@ -175,6 +179,136 @@ final class TransportTest extends TestCase
 
         $this->assertJson($json);
         $this->assertStringContainsString('"type":"log"', $json);
+    }
+
+    /**
+     * A regressão que derrubava o artisan: resolver o transporte com um
+     * InternalLogger de verdade chamava warning()/error(), que não existiam.
+     */
+    public function test_manager_resolve_com_logger_real_sem_quebrar(): void
+    {
+        foreach (['null', 'memory', 'file', 'http'] as $driver) {
+            $manager = new TransportManager(
+                Configuration::fromArray([
+                    'transport' => [
+                        'driver' => $driver,
+                        'file' => ['path' => $this->tmp.'/x.ndjson'],
+                        'http' => ['dsn' => 'https://chave@obs.test/projeto-1'],
+                    ],
+                ]),
+                logger: new InternalLogger,
+            );
+
+            $this->assertInstanceOf(Transport::class, $manager->driver());
+        }
+    }
+
+    public function test_dsn_vazio_nao_dispara_aviso(): void
+    {
+        $spy = $this->loggerSpy();
+
+        $manager = new TransportManager(
+            Configuration::fromArray([
+                'transport' => ['driver' => 'file', 'file' => ['path' => $this->tmp.'/x.ndjson'], 'http' => ['dsn' => '']],
+            ]),
+            logger: new InternalLogger($spy),
+        );
+
+        $this->assertInstanceOf(FileTransport::class, $manager->driver());
+        $this->assertSame([], $spy->records);
+    }
+
+    public function test_dsn_preenchido_com_transporte_que_nao_envia_avisa_uma_vez(): void
+    {
+        $spy = $this->loggerSpy();
+
+        $manager = new TransportManager(
+            Configuration::fromArray([
+                'transport' => [
+                    'driver' => 'file',
+                    'file' => ['path' => $this->tmp.'/x.ndjson'],
+                    'http' => ['dsn' => 'https://chave@obs.test/projeto-1'],
+                ],
+            ]),
+            logger: new InternalLogger($spy),
+        );
+
+        $manager->driver();
+        $manager->driver();
+
+        $this->assertCount(1, $spy->records);
+        $this->assertStringContainsString('OBSERVER_DSN', $spy->records[0]['message']);
+    }
+
+    public function test_http_sem_endpoint_vira_transporte_nulo(): void
+    {
+        $spy = $this->loggerSpy();
+
+        $manager = new TransportManager(
+            Configuration::fromArray([
+                'transport' => ['driver' => 'http', 'http' => ['dsn' => '', 'endpoint' => '', 'api_key' => '']],
+            ]),
+            logger: new InternalLogger($spy),
+        );
+
+        $this->assertInstanceOf(NullTransport::class, $manager->driver());
+        $this->assertCount(1, $spy->records);
+        $this->assertSame('error', $spy->records[0]['level']);
+    }
+
+    public function test_http_com_dsn_invalido_registra_e_nao_lanca(): void
+    {
+        $spy = $this->loggerSpy();
+
+        $manager = new TransportManager(
+            Configuration::fromArray([
+                'transport' => ['driver' => 'http', 'http' => ['dsn' => 'isso-nao-e-um-dsn']],
+            ]),
+            logger: new InternalLogger($spy),
+        );
+
+        $this->assertInstanceOf(NullTransport::class, $manager->driver());
+        $this->assertCount(1, $spy->records);
+        $this->assertStringContainsString('OBSERVER_DSN inválido', $spy->records[0]['message']);
+    }
+
+    public function test_http_com_dsn_valido_usa_endpoint_e_chave_do_dsn(): void
+    {
+        $manager = new TransportManager(Configuration::fromArray([
+            'transport' => ['driver' => 'http', 'http' => ['dsn' => 'https://chave@obs.test/prefixo/projeto-1']],
+        ]));
+
+        $transport = $manager->driver();
+
+        $this->assertInstanceOf(HttpTransport::class, $transport);
+        $this->assertSame('https://obs.test/prefixo/api/v1/events', $transport->url());
+    }
+
+    public function test_http_sem_dsn_cai_nos_valores_separados(): void
+    {
+        $manager = new TransportManager(Configuration::fromArray([
+            'transport' => ['driver' => 'http', 'http' => ['dsn' => '', 'endpoint' => 'https://obs.test', 'api_key' => 'k']],
+        ]));
+
+        $transport = $manager->driver();
+
+        $this->assertInstanceOf(HttpTransport::class, $transport);
+        $this->assertSame('https://obs.test/api/v1/events', $transport->url());
+    }
+
+    private function loggerSpy(): object
+    {
+        return new class extends AbstractLogger
+        {
+            /** @var list<array{level: string, message: string}> */
+            public array $records = [];
+
+            /** @param array<string, mixed> $context */
+            public function log($level, $message, array $context = []): void
+            {
+                $this->records[] = ['level' => (string) $level, 'message' => (string) $message];
+            }
+        };
     }
 
     private function event(): Event

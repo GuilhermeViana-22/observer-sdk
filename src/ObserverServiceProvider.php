@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Observer;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel;
@@ -106,7 +107,7 @@ final class ObserverServiceProvider extends ServiceProvider
      */
     private function mergeObserverConfig(): void
     {
-        /** @var \Illuminate\Contracts\Config\Repository $repository */
+        /** @var Repository $repository */
         $repository = $this->app->make('config');
 
         /** @var array<string, mixed> $package */
@@ -119,8 +120,8 @@ final class ObserverServiceProvider extends ServiceProvider
     }
 
     /**
-     * @param  array<string, mixed>  $defaults
-     * @param  array<string, mixed>  $overrides
+     * @param array<string, mixed> $defaults
+     * @param array<string, mixed> $overrides
      * @return array<string, mixed>
      */
     private function fillMissing(array $defaults, array $overrides): array
@@ -193,8 +194,12 @@ final class ObserverServiceProvider extends ServiceProvider
         $this->app->singleton(InternalLogger::class, function (): InternalLogger {
             $config = $this->app->make(Configuration::class);
 
+            // O logger da aplicação entra SEMPRE; quem decide o que sai é o
+            // InternalLogger. Preso ao debug, o aviso de "DSN definido mas
+            // nenhum evento sendo enviado" só apareceria para quem já
+            // desconfiou do problema — exatamente quem menos precisa dele.
             return new InternalLogger(
-                logger: $config->debug() ? $this->app->make('log') : null,
+                logger: $config->bool('log_internal', true) ? $this->app->make('log') : null,
                 debug: $config->debug(),
             );
         });

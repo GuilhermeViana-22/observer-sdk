@@ -48,7 +48,7 @@ final class HttpTransportTest extends TestCase
         return new HttpTransport(
             endpoint: 'https://observer.test',
             apiKey: 'lsec_1234567890abcdef',
-            serializer: new JsonSerializer(),
+            serializer: new JsonSerializer,
             timeout: 2.0,
             connectTimeout: 1.0,
             retries: $retries,
@@ -75,7 +75,7 @@ final class HttpTransportTest extends TestCase
 
     public function test_url_e_autorizacao_seguem_o_contrato(): void
     {
-        $sender = new FakeSender();
+        $sender = new FakeSender;
         $this->transport($sender)->sendBatch([$this->event()]);
         $this->transport($sender)->flush();
 
@@ -154,7 +154,7 @@ final class HttpTransportTest extends TestCase
 
     public function test_corpo_grande_vai_comprimido(): void
     {
-        $sender = new FakeSender();
+        $sender = new FakeSender;
         $transport = $this->transport($sender);
 
         $transport->sendBatch([$this->event(str_repeat('x', 4096))]);
@@ -167,7 +167,7 @@ final class HttpTransportTest extends TestCase
 
     public function test_corpo_pequeno_vai_sem_compressao(): void
     {
-        $sender = new FakeSender();
+        $sender = new FakeSender;
         $transport = $this->transport($sender);
 
         $transport->sendBatch([$this->event()]);
@@ -194,7 +194,7 @@ final class HttpTransportTest extends TestCase
 
     public function test_lote_cheio_dispara_envio_sem_flush(): void
     {
-        $sender = new FakeSender();
+        $sender = new FakeSender;
         $transport = $this->transport($sender, maxBatch: 2);
 
         $transport->sendBatch([$this->event('a')]);
@@ -206,7 +206,7 @@ final class HttpTransportTest extends TestCase
 
     public function test_flush_sem_pendencia_e_sucesso(): void
     {
-        $sender = new FakeSender();
+        $sender = new FakeSender;
 
         $this->assertTrue($this->transport($sender)->flush());
         $this->assertCount(0, $sender->calls);

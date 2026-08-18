@@ -68,7 +68,11 @@ final class StreamSender implements HttpSender
             return HttpResponse::transportError('falha ao abrir a conexão');
         }
 
-        // $http_response_header é populado no escopo local pelo wrapper.
+        // $http_response_header é populado no escopo local pelo wrapper HTTP.
+        // O ?? fica: a variável só existe quando o wrapper devolveu cabeçalhos,
+        // e um "Undefined variable" aqui dentro viraria warning no log da
+        // aplicação observada.
+        // @phpstan-ignore nullCoalesce.variable
         $status = $this->statusFrom($http_response_header ?? []);
 
         return new HttpResponse(status: $status, body: $response);

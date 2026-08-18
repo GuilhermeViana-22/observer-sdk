@@ -5,6 +5,60 @@ Todas as mudanças relevantes deste pacote são documentadas aqui.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o
 versionamento segue [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.4.2] — 2026-08-18
+
+### Corrigido
+
+- **Qualquer comando artisan podia morrer no boot com `Call to undefined
+  method`.** O `TransportManager` e o `HttpTransport` chamavam
+  `$logger->warning()` e `$logger->error()`, métodos que o `InternalLogger`
+  nunca teve — ele só expunha `safely()`, `report()` e `debug()`. Bastava o
+  transporte ser resolvido com um logger presente para a aplicação observada
+  cair. Os dois níveis agora existem de verdade.
+
+  O `phpstan analyse` já apontava as quatro chamadas; a suíte agora falha
+  antes do cliente, com testes cobrindo cada caminho.
+
+- **`OBSERVER_DSN=` vazio no `.env` contava como DSN configurado.** O `env()`
+  do Laravel devolve string vazia, não `null`, para uma variável declarada e
+  não preenchida — o estado normal de quem ainda vai integrar. Era o gatilho
+  que disparava o aviso de "DSN ignorado" e, com ele, o erro fatal acima.
+
+  A normalização foi para o `Configuration`, e vale para o SDK inteiro:
+  `string()` e `bool()` tratam vazio (inclusive só espaços) como **ausente**,
+  caindo no default. `OBSERVER_ENABLED=` vazio, por exemplo, deixou de
+  desligar o SDK em silêncio.
+
+- **Transporte `http` sem endpoint tentava enviar mesmo assim.** Com o driver
+  selecionado e nenhum endpoint válido — DSN inválido, `OBSERVER_ENDPOINT`
+  vazio — cada flush montava uma URL quebrada, esperava o timeout e ainda
+  dormia o backoff entre as tentativas, tudo dentro do request da aplicação.
+  Agora o resultado é o transporte nulo, que descarta na hora, e o motivo fica
+  registrado uma vez.
+
+- O default de `transport.http.endpoint` deixou de ser o placeholder
+  `https://api.observer.dev`, um host que não responde: sem `OBSERVER_ENDPOINT`
+  e sem DSN, o valor é ausente e o envio fica desligado explicitamente.
+
+### Adicionado
+
+- `InternalLogger::warning()` e `::error()`, para o que o desenvolvedor da
+  aplicação precisa saber: o SDK está configurado e **não** está funcionando.
+  Saem no log da aplicação independente do `debug`, no máximo uma vez por
+  mensagem, por processo — numa queda do Observer Server, o caminho de falha
+  roda a cada flush, e sem a trava o log do cliente viraria refém do nosso
+  incidente.
+
+- `observer.log_internal` (`OBSERVER_LOG_INTERNAL`, padrão `true`) para
+  silenciar esses avisos.
+
+### Alterado
+
+- Todas as linhas que o SDK escreve no log da aplicação levam o prefixo
+  `[observer]`, e o `LogCollector` as descarta explicitamente — nenhum aviso
+  nosso vira evento cobrado ao cliente. É a terceira camada do "o SDK é o meio,
+  nunca o fim", junto do `SelfGuard` e da checagem por caminho do pacote.
+
 ## [0.4.1] — 2026-08-14
 
 ### Corrigido

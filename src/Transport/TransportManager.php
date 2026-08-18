@@ -7,9 +7,9 @@ namespace Observer\Transport;
 use Closure;
 use Observer\Contracts\Transport;
 use Observer\Exceptions\TransportException;
-use Observer\Support\Dsn;
 use Observer\Serializers\JsonSerializer;
 use Observer\Support\Configuration;
+use Observer\Support\Dsn;
 use Observer\Support\InternalLogger;
 
 /**
@@ -128,7 +128,10 @@ final class TransportManager
             return;
         }
 
-        if ($this->config->string('transport.http.dsn') === null) {
+        // string() já trata `OBSERVER_DSN=` vazio como não definido: avisar
+        // sobre um DSN que o usuário não chegou a preencher seria ruído puro
+        // em toda aplicação que ainda não integrou.
+        if ($this->dsn() === null) {
             return;
         }
 
@@ -143,20 +146,54 @@ final class TransportManager
 
     private bool $warnedAboutDsn = false;
 
-    private function createHttpDriver(): HttpTransport
+    /**
+     * DSN configurado, ou null quando ausente/vazio.
+     */
+    private function dsn(): ?string
     {
+        return $this->config->string('transport.http.dsn');
+    }
+
+    private function createHttpDriver(): Transport
+    {
+        $raw = $this->dsn();
+
         // O DSN, quando presente, é a fonte da verdade: ele carrega endpoint e
         // chave numa string só. Os valores separados continuam funcionando para
         // quem prefere configurá-los assim.
-        $dsn = Dsn::parse($this->config->string('transport.http.dsn'));
+        $dsn = Dsn::parse($raw);
+        $dsnInvalido = $dsn === null && $raw !== null;
 
-        if ($dsn === null && $this->config->string('transport.http.dsn') !== null) {
-            $this->logger?->error('OBSERVER_DSN inválido; o envio ficará desligado.');
+        if ($dsnInvalido) {
+            $this->logger?->error(
+                'OBSERVER_DSN inválido: o formato é https://<chave>@<host>/<id-do-projeto>.'
+            );
+        }
+
+        $endpoint = $dsn !== null
+            ? $dsn->endpoint
+            : $this->config->string('transport.http.endpoint');
+
+        // Sem endpoint não existe envio possível, e insistir custa caro: cada
+        // flush montaria uma URL quebrada, esperaria o timeout e ainda dormiria
+        // o backoff entre as tentativas — dentro do request da aplicação. O
+        // transporte nulo descarta na hora e o motivo fica no log, uma vez.
+        if ($endpoint === null) {
+            // Com DSN inválido o motivo já foi registrado acima; repetir só
+            // trocaria a causa real por uma consequência dela.
+            if (! $dsnInvalido) {
+                $this->logger?->error(
+                    'Transporte http selecionado sem endpoint: defina OBSERVER_DSN ou OBSERVER_ENDPOINT. '.
+                    'Nenhum evento será enviado.'
+                );
+            }
+
+            return $this->createNullDriver();
         }
 
         return new HttpTransport(
-            endpoint: $dsn?->endpoint ?? ($this->config->string('transport.http.endpoint', '') ?? ''),
-            apiKey: $dsn?->key ?? $this->config->string('transport.http.api_key'),
+            endpoint: $endpoint,
+            apiKey: $dsn !== null ? $dsn->key : $this->config->string('transport.http.api_key'),
             serializer: $this->serializer,
             timeout: $this->config->float('transport.http.timeout', 2.0),
             connectTimeout: $this->config->float('transport.http.connect_timeout', 1.0),
